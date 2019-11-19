@@ -1,4 +1,4 @@
-import SharedSecret from '../src/shared_secret';
+import SharedSecret, {KeyType} from '../src/shared_secret';
 import chai = require('chai');
 
 const assert = chai.assert;
@@ -24,6 +24,13 @@ describe('Shared Secret Tests', () => {
 		assert.equal(sharedSecrets[2].toString('hex'), '3a6b412548762f0dbccce5c7ae7bb8147d1caf9b5471c34120b30bc9c04891cc');
 		assert.equal(sharedSecrets[3].toString('hex'), '21e13c2d7cfe7e18836df50872466117a295783ab8aab0e7ecc8c725503ad02d');
 		assert.equal(sharedSecrets[4].toString('hex'), 'b5756b9b542727dbafc6765a49488b023a725d631af688fc031217e90770c328');
+	});
+
+	it('should derive a key from shared secret', () => {
+		const sharedSecret = Buffer.from('b5756b9b542727dbafc6765a49488b023a725d631af688fc031217e90770c328', 'hex');
+		const rhoKey = SharedSecret.deriveKey({sharedSecret, keyType: KeyType.Rho});
+		assert.typeOf(rhoKey, 'UInt8Array');
+		assert.equal(rhoKey.toString('hex'), '034e18b8cc718e8af6339106e706c52d8df89e2b1f7e9142d996acf88df8799b');
 	});
 
 });

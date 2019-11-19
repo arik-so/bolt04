@@ -6,6 +6,12 @@ import * as crypto from 'crypto';
 const debug = debugModule('bolt04:shared_secret');
 const secp256k1 = ecurve.getCurveByName('secp256k1');
 
+export enum KeyType {
+	Rho = 'rho',
+	Mu = 'mu',
+	Um = 'um'
+}
+
 export default class SharedSecret {
 
 	public static calculateSharedSecrets({sessionKey, hopPublicKeys}: { sessionKey: Buffer, hopPublicKeys: Buffer[] }): Buffer[] {
@@ -38,5 +44,9 @@ export default class SharedSecret {
 		}
 
 		return hopSharedSecrets;
+	}
+
+	public static deriveKey({sharedSecret, keyType}: { sharedSecret: Buffer, keyType: KeyType }): Buffer {
+		return crypto.createHmac('sha256', keyType).update(sharedSecret).digest();
 	}
 }
