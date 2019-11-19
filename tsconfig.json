@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2017",
-    "sourceMap": true,
-    "lib": [
-      "es2017"
-    ]
-  },
-  "compileOnSave": true,
-  "exclude": [
-    "node_modules"
-  ]
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2017",
+		"sourceMap": true,
+		"lib": [
+			"es2017"
+		]
+	},
+	"compileOnSave": true,
+	"exclude": [
+		"node_modules"
+	]
 }

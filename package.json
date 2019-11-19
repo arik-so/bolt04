@@ -1,35 +1,35 @@
 {
-  "name": "bolt04",
-  "version": "0.1.0",
-  "description": "Module for Lightning's Sphinx onion routing protocol",
-  "main": "index.js",
-  "scripts": {
-    "test": "./node_modules/mocha/bin/_mocha ./test",
-    "tsc": "./node_modules/typescript/bin/tsc --build tsconfig.json"
-  },
-  "keywords": [
-    "lightning",
-    "bolt",
-    "sphinx",
-    "onion"
-  ],
-  "author": "Arik Sosman",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/bigi": "^1.4.2",
-    "@types/chai": "^4.2.5",
-    "@types/debug": "^4.1.5",
-    "@types/ecurve": "^1.0.0",
-    "@types/mocha": "^5.2.7",
-    "chai": "^4.2.0",
-    "mocha": "^6.2.2",
-    "typescript": "^3.7.2"
-  },
-  "dependencies": {
-    "bigi": "^1.4.2",
-    "chacha20": "^0.1.4",
-    "debug": "^4.1.1",
-    "ecurve": "^1.0.6",
-    "varuint-bitcoin": "^1.1.2"
-  }
+	"name": "bolt04",
+	"version": "0.1.0",
+	"description": "Module for Lightning's Sphinx onion routing protocol",
+	"main": "index.js",
+	"scripts": {
+		"test": "./node_modules/mocha/bin/_mocha ./test",
+		"tsc": "./node_modules/typescript/bin/tsc --build tsconfig.json"
+	},
+	"keywords": [
+		"lightning",
+		"bolt",
+		"sphinx",
+		"onion"
+	],
+	"author": "Arik Sosman",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/bigi": "^1.4.2",
+		"@types/chai": "^4.2.5",
+		"@types/debug": "^4.1.5",
+		"@types/ecurve": "^1.0.0",
+		"@types/mocha": "^5.2.7",
+		"chai": "^4.2.0",
+		"mocha": "^6.2.2",
+		"typescript": "^3.7.2"
+	},
+	"dependencies": {
+		"bigi": "^1.4.2",
+		"chacha20": "^0.1.4",
+		"debug": "^4.1.1",
+		"ecurve": "^1.0.6",
+		"varuint-bitcoin": "^1.1.2"
+	}
 }
