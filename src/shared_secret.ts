@@ -14,6 +14,11 @@ export enum KeyType {
 
 export default class SharedSecret {
 
+	public static calculateSharedSecret({privateKey, publicKey}: { privateKey: Buffer, publicKey: Buffer }): Buffer {
+		const sharedSecrets = this.calculateSharedSecrets({sessionKey: privateKey, hopPublicKeys: [publicKey]});
+		return sharedSecrets[0];
+	}
+
 	public static calculateSharedSecrets({sessionKey, hopPublicKeys}: { sessionKey: Buffer, hopPublicKeys: Buffer[] }): Buffer[] {
 		let ephemeralPrivateKey = Bigi.fromBuffer(sessionKey);
 		const hopSharedSecrets = [];
