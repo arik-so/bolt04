@@ -11,43 +11,35 @@ export default class Sphinx {
 	static readonly HMAC_LENGTH = 32;
 	static readonly ONION_PACKET_LENGTH = 1300;
 
-	private static generateFiller({sharedSecrets, payloads}: { sharedSecrets: Buffer[], payloads: HopPayload[] }) {
-		const payloadSizes = payloads.map(p => p.sphinxSize + Sphinx.HMAC_LENGTH);
-		const totalPayloadSize = payloadSizes.reduce((a, b) => a + b);
-		const lastPayloadSize = payloadSizes[payloadSizes.length - 1];
+	private version;
+	private rawOnion;
+	private ephemeralPublicKey;
+	private nextHmac;
 
-		const fillerSize = totalPayloadSize - lastPayloadSize;
-		const filler = Buffer.alloc(fillerSize, 0);
-
-		let trailingPayloadSize = 0;
-		for (let i = 0; i < sharedSecrets.length - 1; i++) {
-			debug('Filler round %d', i);
-			const currentSharedSecret = sharedSecrets[i];
-			const currentPayloadSize = payloadSizes[i];
-
-			debug('Shared secret: %s', currentSharedSecret.toString('hex'));
-			const streamKey = SharedSecret.deriveKey({sharedSecret: currentSharedSecret, keyType: KeyType.Rho});
-			debug('Stream key: %s', streamKey.toString('hex'));
-
-			const fillerSourceStart = Sphinx.ONION_PACKET_LENGTH - trailingPayloadSize;
-			const fillerSourceEnd = Sphinx.ONION_PACKET_LENGTH + currentPayloadSize;
-
-			const streamLength = Sphinx.ONION_PACKET_LENGTH * 2;
-			const streamBytes = chacha.encrypt(streamKey, Buffer.alloc(8, 0), Buffer.alloc(streamLength, 0));
-			for (let j = fillerSourceStart; j < fillerSourceEnd; j++) {
-				const fillerIndex = j - fillerSourceStart;
-				const fillerValue = filler[fillerIndex];
-				const streamValue = streamBytes[j];
-				filler.writeUInt8(fillerValue ^ streamValue, fillerIndex);
-			}
-
-			trailingPayloadSize += currentPayloadSize;
-		}
-
-		return filler;
+	private constructor({version = 0, rawOnion, ephemeralPublicKey, nextHmac}: { version?: number, rawOnion: Buffer, ephemeralPublicKey: Buffer, nextHmac: Buffer }) {
+		this.version = version;
+		this.rawOnion = rawOnion;
+		this.ephemeralPublicKey = ephemeralPublicKey;
+		this.nextHmac = nextHmac;
 	}
 
-	public static constructOnion({sharedSecrets, payloads, firstHopPublicKey, associatedData}: { sharedSecrets: Buffer[], payloads: HopPayload[], firstHopPublicKey: Buffer, associatedData?: Buffer }): Buffer {
+	public toBuffer() {
+		return Buffer.concat([Buffer.alloc(1, this.version), this.ephemeralPublicKey, this.rawOnion, this.nextHmac]);
+	}
+
+	public peel({sharedSecret, hopPrivateKey}: { sharedSecret?: Buffer, hopPrivateKey?: Buffer }) {
+
+	}
+
+	public static fromBuffer(onion: Buffer) {
+		const version = onion.readUInt8(0);
+		const publicKey = onion.slice(1, 34);
+		const nextHmac = onion.slice(-32);
+		const rawOnion = onion.slice(34, -32);
+		return new Sphinx({version, rawOnion, nextHmac, ephemeralPublicKey: publicKey});
+	}
+
+	public static constructOnion({sharedSecrets, payloads, firstHopPublicKey, associatedData}: { sharedSecrets: Buffer[], payloads: HopPayload[], firstHopPublicKey: Buffer, associatedData?: Buffer }): Sphinx {
 		// generate the packet
 		let nextHmac = Buffer.alloc(Sphinx.HMAC_LENGTH, 0); // the final hmac will be 0 bytes
 		const filler = Sphinx.generateFiller({sharedSecrets, payloads});
@@ -92,7 +84,43 @@ export default class Sphinx {
 			nextHmac = nextHmacBuilder.digest();
 		}
 
-		return Buffer.concat([Buffer.alloc(1, 0), firstHopPublicKey, onionPacket, nextHmac]);
+		return new Sphinx({rawOnion: onionPacket, nextHmac, ephemeralPublicKey: firstHopPublicKey});
+	}
+
+	private static generateFiller({sharedSecrets, payloads}: { sharedSecrets: Buffer[], payloads: HopPayload[] }) {
+		const payloadSizes = payloads.map(p => p.sphinxSize + Sphinx.HMAC_LENGTH);
+		const totalPayloadSize = payloadSizes.reduce((a, b) => a + b);
+		const lastPayloadSize = payloadSizes[payloadSizes.length - 1];
+
+		const fillerSize = totalPayloadSize - lastPayloadSize;
+		const filler = Buffer.alloc(fillerSize, 0);
+
+		let trailingPayloadSize = 0;
+		for (let i = 0; i < sharedSecrets.length - 1; i++) {
+			debug('Filler round %d', i);
+			const currentSharedSecret = sharedSecrets[i];
+			const currentPayloadSize = payloadSizes[i];
+
+			debug('Shared secret: %s', currentSharedSecret.toString('hex'));
+			const streamKey = SharedSecret.deriveKey({sharedSecret: currentSharedSecret, keyType: KeyType.Rho});
+			debug('Stream key: %s', streamKey.toString('hex'));
+
+			const fillerSourceStart = Sphinx.ONION_PACKET_LENGTH - trailingPayloadSize;
+			const fillerSourceEnd = Sphinx.ONION_PACKET_LENGTH + currentPayloadSize;
+
+			const streamLength = Sphinx.ONION_PACKET_LENGTH * 2;
+			const streamBytes = chacha.encrypt(streamKey, Buffer.alloc(8, 0), Buffer.alloc(streamLength, 0));
+			for (let j = fillerSourceStart; j < fillerSourceEnd; j++) {
+				const fillerIndex = j - fillerSourceStart;
+				const fillerValue = filler[fillerIndex];
+				const streamValue = streamBytes[j];
+				filler.writeUInt8(fillerValue ^ streamValue, fillerIndex);
+			}
+
+			trailingPayloadSize += currentPayloadSize;
+		}
+
+		return filler;
 	}
 
 }
