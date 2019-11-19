@@ -8,9 +8,9 @@ export enum HopPayloadType {
 
 export default class HopPayload {
 	private type: HopPayloadType;
-	private channelId: Buffer;
-	private amountToForward: Bigi;
-	private outgoingCltvValue: number;
+	public readonly channelId: Buffer;
+	public readonly amountToForward: Bigi;
+	public readonly outgoingCltvValue: number;
 
 	constructor({channel_id = Buffer.alloc(0), amount_to_forward = Bigi.valueOf(0), outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: { channel_id?: Buffer, amount_to_forward?: Bigi, outgoing_cltv_value?: number, type?: HopPayloadType }) {
 		this.channelId = channel_id;

@@ -13,10 +13,10 @@ export default class Sphinx {
 
 	private version: number;
 	private hopPayloads: Buffer;
-	private ephemeralPublicKey?: Buffer;
+	private ephemeralPublicKey: Buffer;
 	private nextHmac: Buffer;
 
-	private constructor({version = 0, rawOnion, ephemeralPublicKey, nextHmac}: { version?: number, rawOnion: Buffer, ephemeralPublicKey?: Buffer, nextHmac: Buffer }) {
+	private constructor({version = 0, rawOnion, ephemeralPublicKey, nextHmac}: { version?: number, rawOnion: Buffer, ephemeralPublicKey: Buffer, nextHmac: Buffer }) {
 		this.version = version;
 		this.hopPayloads = rawOnion;
 		this.ephemeralPublicKey = ephemeralPublicKey;
@@ -35,15 +35,22 @@ export default class Sphinx {
 			privateKey: hopPrivateKey,
 			publicKey: this.ephemeralPublicKey
 		});
+		debug('Shared secret: %s', sharedSecret.toString('hex'));
 
 		const rhoKey = SharedSecret.deriveKey({sharedSecret: sharedSecret, keyType: KeyType.Rho});
 		const muKey = SharedSecret.deriveKey({sharedSecret: sharedSecret, keyType: KeyType.Mu});
+		debug('Rho key: %s', rhoKey.toString('hex'));
+		debug('Mu key:  %s', muKey.toString('hex'));
 
 		const currentHmacBuilder = crypto.createHmac('sha256', muKey).update(this.hopPayloads);
 		if (associatedData) {
 			currentHmacBuilder.update(associatedData);
 		}
 		const currentHmac = currentHmacBuilder.digest();
+
+		debug('Expected HMAC: %s', this.nextHmac.toString('hex'));
+		debug('Actual HMAC:   %s', currentHmac.toString('hex'));
+
 		if (!currentHmac.equals(this.nextHmac)) {
 			throw new Error('HMAC mismatch on peel');
 		}
@@ -65,10 +72,15 @@ export default class Sphinx {
 		const nextHmac = extendedPayload.slice(hmacIndex, nextPayloadIndex);
 		if (!nextHmac.equals(Buffer.alloc(Sphinx.HMAC_LENGTH, 0))) {
 			const nextPayload = extendedPayload.slice(nextPayloadIndex, nextPayloadIndex + Sphinx.ONION_PACKET_LENGTH);
+			const nextEphemeralPublicKey = SharedSecret.calculateNextEphemeralPublicKey({
+				sharedSecret,
+				ephemeralPublicKey: this.ephemeralPublicKey
+			});
 			nextSphinx = new Sphinx({
-				nextHmac,
+				version: this.version,
+				ephemeralPublicKey: nextEphemeralPublicKey,
 				rawOnion: nextPayload,
-				version: this.version
+				nextHmac
 			});
 		}
 
@@ -76,10 +88,6 @@ export default class Sphinx {
 			hopPayload,
 			sphinx: nextSphinx
 		};
-	}
-
-	public forward(nextHopPublicKey: Buffer): Sphinx {
-		throw new Error('unimplemented');
 	}
 
 	public static fromBuffer(onion: Buffer) {

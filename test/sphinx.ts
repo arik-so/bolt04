@@ -53,7 +53,17 @@ describe('Sphinx Tests', () => {
 			Buffer.from('4444444444444444444444444444444444444444444444444444444444444444', 'hex'),
 			Buffer.from('4545454545454545454545454545454545454545454545454545454545454545', 'hex')
 		];
-		sphinx.peel({hopPrivateKey: hopPrivateKeys[0], associatedData});
+
+		const peel0 = sphinx.peel({hopPrivateKey: hopPrivateKeys[0], associatedData});
+		const peel1 = peel0.sphinx.peel({hopPrivateKey: hopPrivateKeys[1], associatedData});
+		const peel2 = peel1.sphinx.peel({hopPrivateKey: hopPrivateKeys[2], associatedData});
+		const peel3 = peel2.sphinx.peel({hopPrivateKey: hopPrivateKeys[3], associatedData});
+		const peel4 = peel3.sphinx.peel({hopPrivateKey: hopPrivateKeys[4], associatedData});
+		assert.isNull(peel4.sphinx);
+
+		const lastHopPayload = peel4.hopPayload;
+		assert.instanceOf(lastHopPayload, HopPayload);
+		assert.equal(lastHopPayload.outgoingCltvValue, 4);
 	});
 
 });
