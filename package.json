@@ -1,11 +1,12 @@
 {
 	"name": "bolt04",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Module for Lightning's Sphinx onion routing protocol",
 	"main": "index.js",
 	"scripts": {
 		"test": "./node_modules/mocha/bin/_mocha ./test",
-		"tsc": "./node_modules/typescript/bin/tsc --build tsconfig.json"
+		"tsc": "./node_modules/typescript/bin/tsc --build tsconfig.json",
+		"install": "npm run tsc"
 	},
 	"repository": {
 		"type": "git",
