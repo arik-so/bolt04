@@ -27,14 +27,21 @@ export default class Sphinx {
 		return Buffer.concat([Buffer.alloc(1, this.version), this.ephemeralPublicKey, this.hopPayloads, this.nextHmac]);
 	}
 
-	public peel({sharedSecretX, hopPrivateKey, associatedData}: { sharedSecretX?: Buffer, hopPrivateKey?: Buffer, associatedData?: Buffer }): {
+	public peel({sharedSecret, hopPrivateKey, associatedData}: { sharedSecret?: Buffer, hopPrivateKey?: Buffer, associatedData?: Buffer }): {
 		hopPayload: HopPayload,
 		sphinx?: Sphinx
 	} {
-		const sharedSecret = SharedSecret.calculateSharedSecret({
-			privateKey: hopPrivateKey,
-			publicKey: this.ephemeralPublicKey
-		});
+		if (!!sharedSecret === !!hopPrivateKey) {
+			throw new Error('sharedSecret XOR hopPrivateKey must be specified');
+		}
+
+		if (hopPrivateKey) {
+			sharedSecret = SharedSecret.calculateSharedSecret({
+				privateKey: hopPrivateKey,
+				publicKey: this.ephemeralPublicKey
+			});
+		}
+
 		debug('Shared secret: %s', sharedSecret.toString('hex'));
 
 		const rhoKey = SharedSecret.deriveKey({sharedSecret: sharedSecret, keyType: KeyType.Rho});
