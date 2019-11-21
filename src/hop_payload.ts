@@ -1,9 +1,17 @@
 import Bigi = require('bigi');
 import varuint = require('varuint-bitcoin');
+import {VarInt, TypeHandler} from 'lightning-tlv';
+import TLV from 'lightning-tlv/src/tlv';
 
 export enum HopPayloadType {
 	Legacy,
 	TLV
+}
+
+export enum HopPayloadTLVTypes {
+	AMOUNT_TO_FORWARD = 2,
+	OUTGOING_CLTV_VALUE = 4,
+	SHORT_CHANNEL_ID = 6
 }
 
 export default class HopPayload {
@@ -20,7 +28,12 @@ export default class HopPayload {
 	}
 
 	get size(): number {
-		return 32;
+		if (this.type === HopPayloadType.Legacy) {
+			return 32;
+		}
+
+		const dataBuffer = this.toDataBuffer();
+		return dataBuffer.length;
 	}
 
 	get sphinxSize(): number {
@@ -29,12 +42,28 @@ export default class HopPayload {
 		}
 
 		const payloadLength = this.size;
-		return varuint.encodingLength(payloadLength) + payloadLength;
+		const varint = new VarInt(payloadLength);
+		return varint.length + payloadLength;
 	}
 
 	toDataBuffer(): Buffer {
 		if (this.type !== HopPayloadType.Legacy) {
-			throw new Error('TLV hop payload type not yet implemented');
+			// create sub-TLV packets
+			const tu64Handler = new TypeHandler.tu64();
+			const tu32Handler = new TypeHandler.tu32();
+
+			// AMOUNT_TO_FORWARD: tu64
+			const amountToForwardBuffer = tu64Handler.toBuffer(BigInt(this.amountToForward.toHex()));
+			const amountToForwardTlv = new TLV(HopPayloadTLVTypes.AMOUNT_TO_FORWARD, amountToForwardBuffer);
+
+			// OUTGOING_CLTV_VALUE: tu32
+			const outgoingCltvValueBuffer = tu32Handler.toBuffer(this.outgoingCltvValue);
+			const outgoingCltvValueTlv = new TLV(HopPayloadTLVTypes.OUTGOING_CLTV_VALUE, outgoingCltvValueBuffer);
+
+			// SHORT_CHANNEL_ID: Buffer
+			const channelIdTlv = new TLV(HopPayloadTLVTypes.SHORT_CHANNEL_ID, this.channelId);
+
+			return Buffer.concat([amountToForwardTlv.toBuffer(), outgoingCltvValueTlv.toBuffer(), channelIdTlv.toBuffer()]);
 		}
 		const buffer = Buffer.alloc(32);
 
@@ -53,7 +82,8 @@ export default class HopPayload {
 	toSphinxBuffer(): Buffer {
 		const dataBuffer = this.toDataBuffer();
 		if (this.type === HopPayloadType.TLV) {
-			return Buffer.concat([varuint.encode(this.size), dataBuffer]);
+			const varint = new VarInt(this.size);
+			return Buffer.concat([varint.toBuffer(), dataBuffer]);
 		}
 
 		return Buffer.concat([Buffer.alloc(1, 0), dataBuffer]);
