@@ -57,7 +57,7 @@ Equipped with those, we can calculate the per-hop shared secrets.
 const sharedSecrets = SharedSecret.calculateSharedSecrets({sessionKey, hopPublicKeys});
 ```
 
-Now we specify the actualy data we're gonna send. In this example, we generate some hop payloads with monotonically
+Now we specify the actual data we're gonna send. In this example, we generate some hop payloads with monotonically
 increasing values for their various fields.
 
 ```typescript
