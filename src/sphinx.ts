@@ -71,7 +71,7 @@ export default class Sphinx {
 			extendedPayload.writeUInt8(extendedPayload[i] ^ streamBytes[i], i);
 		}
 
-		const hopPayload = HopPayload.fromSphinxBuffer(extendedPayload);
+		const hopPayload = HopPayload.parseSphinxBuffer(extendedPayload);
 		const hmacIndex = hopPayload.sphinxSize;
 		const nextPayloadIndex = hmacIndex + Sphinx.HMAC_LENGTH;
 

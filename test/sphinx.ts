@@ -2,6 +2,7 @@ import Bigi = require('bigi');
 import chai = require('chai');
 import HopPayload from '../src/hop_payload';
 import Sphinx from '../src/sphinx';
+import {SharedSecret} from '../index';
 
 const assert = chai.assert;
 
@@ -23,7 +24,7 @@ describe('Sphinx Tests', () => {
 			const currentChannelId = Buffer.alloc(8, i);
 			const currentPayload = new HopPayload({
 				channel_id: currentChannelId,
-				amount_to_forward: Bigi.valueOf(i),
+				amount_to_forward: i,
 				outgoing_cltv_value: i
 			});
 			payloads.push(currentPayload);

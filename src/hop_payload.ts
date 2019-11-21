@@ -1,14 +1,12 @@
-import Bigi = require('bigi');
-import varuint = require('varuint-bitcoin');
-import {VarInt, TypeHandler} from 'lightning-tlv';
-import TLV from 'lightning-tlv/src/tlv';
+import bigintBuffer = require('bigint-buffer');
+import {BigSize, TLV, TypeHandler} from 'lightning-tlv';
 
 export enum HopPayloadType {
 	Legacy,
 	TLV
 }
 
-export enum HopPayloadTLVTypes {
+enum HopPayloadTLVTypes {
 	AMOUNT_TO_FORWARD = 2,
 	OUTGOING_CLTV_VALUE = 4,
 	SHORT_CHANNEL_ID = 6
@@ -16,13 +14,16 @@ export enum HopPayloadTLVTypes {
 
 export default class HopPayload {
 	private type: HopPayloadType;
-	public readonly channelId: Buffer;
-	public readonly amountToForward: Bigi;
+	public readonly channelId?: Buffer;
+	public readonly amountToForward: bigint;
 	public readonly outgoingCltvValue: number;
 
-	constructor({channel_id = Buffer.alloc(0), amount_to_forward = Bigi.valueOf(0), outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: { channel_id?: Buffer, amount_to_forward?: Bigi, outgoing_cltv_value?: number, type?: HopPayloadType }) {
+	constructor({channel_id = null, amount_to_forward = 0, outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: { channel_id?: Buffer, amount_to_forward?: bigint | number, outgoing_cltv_value?: number, type?: HopPayloadType }) {
+		if (!!channel_id && channel_id.length !== 8) {
+			throw new Error('channel_id must be 8 bytes');
+		}
 		this.channelId = channel_id;
-		this.amountToForward = amount_to_forward;
+		this.amountToForward = BigInt(amount_to_forward);
 		this.outgoingCltvValue = outgoing_cltv_value;
 		this.type = type;
 	}
@@ -42,7 +43,7 @@ export default class HopPayload {
 		}
 
 		const payloadLength = this.size;
-		const varint = new VarInt(payloadLength);
+		const varint = new BigSize(payloadLength);
 		return varint.length + payloadLength;
 	}
 
@@ -53,7 +54,7 @@ export default class HopPayload {
 			const tu32Handler = new TypeHandler.tu32();
 
 			// AMOUNT_TO_FORWARD: tu64
-			const amountToForwardBuffer = tu64Handler.toBuffer(BigInt(this.amountToForward.toHex()));
+			const amountToForwardBuffer = tu64Handler.toBuffer(this.amountToForward);
 			const amountToForwardTlv = new TLV(HopPayloadTLVTypes.AMOUNT_TO_FORWARD, amountToForwardBuffer);
 
 			// OUTGOING_CLTV_VALUE: tu32
@@ -61,15 +62,21 @@ export default class HopPayload {
 			const outgoingCltvValueTlv = new TLV(HopPayloadTLVTypes.OUTGOING_CLTV_VALUE, outgoingCltvValueBuffer);
 
 			// SHORT_CHANNEL_ID: Buffer
-			const channelIdTlv = new TLV(HopPayloadTLVTypes.SHORT_CHANNEL_ID, this.channelId);
+			let channelIdTlvBuffer = Buffer.alloc(0);
+			if (!!this.channelId && this.channelId.length > 0) {
+				const channelIdTlv = new TLV(HopPayloadTLVTypes.SHORT_CHANNEL_ID, this.channelId);
+				channelIdTlvBuffer = channelIdTlv.toBuffer();
+			}
 
-			return Buffer.concat([amountToForwardTlv.toBuffer(), outgoingCltvValueTlv.toBuffer(), channelIdTlv.toBuffer()]);
+			return Buffer.concat([amountToForwardTlv.toBuffer(), outgoingCltvValueTlv.toBuffer(), channelIdTlvBuffer]);
 		}
 		const buffer = Buffer.alloc(32);
 
-		this.channelId.copy(buffer, 0);
+		if (!!this.channelId && this.channelId instanceof Buffer) {
+			this.channelId.copy(buffer, 0);
+		}
 
-		const amountToForwardBuffer: Buffer = this.amountToForward.toBuffer(8);
+		const amountToForwardBuffer: Buffer = bigintBuffer.toBufferBE(this.amountToForward, 8);
 		amountToForwardBuffer.copy(buffer, 8);
 
 		buffer.writeUInt32BE(this.outgoingCltvValue, 16);
@@ -82,7 +89,7 @@ export default class HopPayload {
 	toSphinxBuffer(): Buffer {
 		const dataBuffer = this.toDataBuffer();
 		if (this.type === HopPayloadType.TLV) {
-			const varint = new VarInt(this.size);
+			const varint = new BigSize(this.size);
 			return Buffer.concat([varint.toBuffer(), dataBuffer]);
 		}
 
@@ -93,14 +100,14 @@ export default class HopPayload {
 	 *
 	 * @param undelimitedHopPayloads
 	 */
-	static fromSphinxBuffer(undelimitedHopPayloads: Buffer): HopPayload {
+	static parseSphinxBuffer(undelimitedHopPayloads: Buffer): HopPayload {
 		const firstByte = undelimitedHopPayloads[0];
 		if (firstByte === 0) {
 			// this is a legacy
 			const sphinxBuffer = undelimitedHopPayloads.slice(0, 33);
 			const dataBuffer = sphinxBuffer.slice(1);
 			const channelId = dataBuffer.slice(0, 8);
-			const amountToForward = Bigi.fromBuffer(dataBuffer.slice(8, 16));
+			const amountToForward = bigintBuffer.toBigIntBE(dataBuffer.slice(8, 16));
 			const outgoingCltvValue = dataBuffer.readUInt32BE(16);
 			return new HopPayload({
 				type: HopPayloadType.Legacy,
@@ -109,11 +116,37 @@ export default class HopPayload {
 				outgoing_cltv_value: outgoingCltvValue
 			});
 		} else {
-			const length = varuint.decode(undelimitedHopPayloads);
-			const lengthEncodingLength = varuint.encodingLength(length);
-			const sphinxBuffer = undelimitedHopPayloads.slice(0, length + lengthEncodingLength);
-			const dataBuffer = sphinxBuffer.slice(lengthEncodingLength);
-			throw new Error('TLV decoding not supported yet');
+			const bigSize = BigSize.parse(undelimitedHopPayloads);
+			const dataLength = Number(bigSize.value);
+			const lengthEncodingLength = bigSize.length;
+
+			let remainingStream = undelimitedHopPayloads.slice(lengthEncodingLength, lengthEncodingLength + dataLength);
+
+			const tlvs: TLV[] = [];
+			while (remainingStream.length > 0) {
+				const currentTlv = TLV.parse(remainingStream);
+				remainingStream = remainingStream.slice(currentTlv.tlvSize);
+				tlvs.push(currentTlv);
+			}
+
+			const hopPayloadConfig = {
+				type: HopPayloadType.TLV
+			};
+
+			for (const currentTlv of tlvs) {
+				const currentType = Number(currentTlv.type);
+				if (currentType === HopPayloadTLVTypes.AMOUNT_TO_FORWARD) {
+					const tu64Handler = new TypeHandler.tu64();
+					hopPayloadConfig['amount_to_forward'] = tu64Handler.fromBuffer(currentTlv.value);
+				} else if (currentType === HopPayloadTLVTypes.OUTGOING_CLTV_VALUE) {
+					const tu32Handler = new TypeHandler.tu32();
+					hopPayloadConfig['outgoing_cltv_value'] = tu32Handler.fromBuffer(currentTlv.value);
+				} else if (currentType === HopPayloadTLVTypes.SHORT_CHANNEL_ID) {
+					hopPayloadConfig['channel_id'] = currentTlv.value;
+				}
+			}
+
+			return new HopPayload(hopPayloadConfig);
 		}
 	}
 }
