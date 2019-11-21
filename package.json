@@ -22,7 +22,7 @@
 	"author": "Arik Sosman",
 	"license": "MIT",
 	"engines": {
-		"node": ">=8.0.0",
+		"node": ">=10.4.0",
 		"npm": ">=4.0.0"
 	},
 	"devDependencies": {
