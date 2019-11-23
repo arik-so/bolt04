@@ -3,3 +3,7 @@ before_script:
   - npm run tsc
 node_js:
   - '10'
+env:
+  global:
+    - NODE_ENV=test
+    - secure: ACjO8mrB0Ce3tKsHAH+z7Mc6RlghMj7jwL2Qd5ngGduggT2gxduOtKN+ZvMuAp86yj7lHvkv1mCsXB81tWCTArupwwwXiLMI9hFR4z+MeSgJ35ijmAGcwhwCLctXAQabaUZ1uCviqZh7iY6LTs+RxuPxv2xXcI87WKSMeidiA+xFw52lxSlNKl6llxsSRMT5ld5oSPsKbAn63m9Ud7VDffOTAV2oXlHnnfGHu1QCRAWEc0tJ+kQpUfKst9ZAdiQPJhSfYCKfOwKzmk1EdqB2IdOLHeF5GwNI9q8+PFgtP8nWMSrj3sHQBtM8XQe5faj4KjD4nKAJZ/xq3BjtRJ5BdXaPf62PwWiX1+sAS2fGqSLtp+ET6yMCyPt6qV4JXgfJUqlYhrIX1vPOvZNidLJ0dS+Z6EcGNbRywHYw9OTA2ksSUA1/EtIZMr+3P7U3fehBSNrLpx2Yr1ttH2rfypL8tGKdP+MuditPx+obp6nlDjBsqSdI4TEciGl4W2/qGf/K/A3ssrQaZWeGmwhSFEjMpB8T46PeTZx1nf+L3/p8O761qEUxGDJ6ZjaSHUaQHJi8GS+ZlyIYwqhBq/AXVCWYA5/YWP+NmZfleooplV7monYpIntge/4WJmX080a5EXwJl/XDVczT0MDesXqvDa8w1P/ZcybfbKmZi0tJVQIgVr0=
