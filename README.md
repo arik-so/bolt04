@@ -1,5 +1,6 @@
 # bolt04
 [![Build Status](https://travis-ci.com/arik-so/bolt04.svg?branch=master)](https://travis-ci.com/arik-so/bolt04)
+[![Coverage Status](https://coveralls.io/repos/github/arik-so/bolt04/badge.svg?branch=master)](https://coveralls.io/github/arik-so/bolt04?branch=master)
 
 A utility for Lightning Network's BOLT 4 specification. 
 
