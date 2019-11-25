@@ -7,6 +7,7 @@
 	"scripts": {
 		"test": "./node_modules/mocha/bin/_mocha ./test",
 		"tsc": "./node_modules/typescript/bin/tsc --build tsconfig.json",
+		"coverage": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly ./test/",
 		"prepublish": "npm run tsc"
 	},
 	"repository": {
@@ -33,6 +34,8 @@
 		"@types/mocha": "^5.2.7",
 		"@types/node": "^12.12.11",
 		"chai": "^4.2.0",
+		"coveralls": "^3.0.8",
+		"istanbul": "^0.4.5",
 		"mocha": "^6.2.2",
 		"typescript": "^3.7.2"
 	},
@@ -42,7 +45,7 @@
 		"chacha20": "^0.1.4",
 		"debug": "^4.1.1",
 		"ecurve": "^1.0.6",
-		"lightning-tlv": "^0.1.4",
+		"lightning-tlv": "^0.1.5",
 		"varuint-bitcoin": "^1.1.2"
 	}
 }
