@@ -1,4 +1,4 @@
-import bigintBuffer = require('bigint-buffer');
+import * as bigintBuffer from "bigint-buffer";
 import {BigSize, TLV, TypeHandler} from 'lightning-tlv';
 
 export enum HopPayloadType {
@@ -14,11 +14,16 @@ enum HopPayloadTLVTypes {
 
 export default class HopPayload {
 	private type: HopPayloadType;
-	public readonly channelId?: Buffer;
+	public readonly channelId?: Buffer | null;
 	public readonly amountToForward: bigint;
 	public readonly outgoingCltvValue: number;
 
-	constructor({channel_id = null, amount_to_forward = 0, outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: { channel_id?: Buffer, amount_to_forward?: bigint | number, outgoing_cltv_value?: number, type?: HopPayloadType }) {
+	constructor({channel_id = null, amount_to_forward = 0, outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: {
+		channel_id?: Buffer | null,
+		amount_to_forward?: bigint | number,
+		outgoing_cltv_value?: number,
+		type?: HopPayloadType
+	}) {
 		if (!!channel_id && channel_id.length !== 8) {
 			throw new Error('channel_id must be 8 bytes');
 		}
@@ -129,7 +134,7 @@ export default class HopPayload {
 				tlvs.push(currentTlv);
 			}
 
-			const hopPayloadConfig = {
+			const hopPayloadConfig: any = {
 				type: HopPayloadType.TLV
 			};
 

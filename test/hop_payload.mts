@@ -1,5 +1,5 @@
-import HopPayload, {HopPayloadType} from '../src/hop_payload';
-import chai = require('chai');
+import HopPayload, {HopPayloadType} from '../src/hop_payload.mjs';
+import chai from 'chai';
 
 const assert = chai.assert;
 
@@ -24,7 +24,7 @@ describe('Hop Payload Test', () => {
 		it('should deserialize a hop payload', () => {
 			const undelimitedBuffer = Buffer.from('000a0b0c0d0e0f101100000000042c1d800000007c000000000000000000000000', 'hex');
 			const hopPayload = HopPayload.parseSphinxBuffer(undelimitedBuffer);
-			assert.equal(hopPayload.channelId.toString('hex'), '0a0b0c0d0e0f1011');
+			assert.equal(hopPayload.channelId!.toString('hex'), '0a0b0c0d0e0f1011');
 			assert.equal(hopPayload.amountToForward, BigInt(0.7e8));
 			assert.equal(hopPayload.outgoingCltvValue, 124);
 		});

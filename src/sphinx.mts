@@ -1,10 +1,20 @@
-import chacha = require('chacha20');
-import debugModule = require('debug');
+// @ts-ignore
+import chacha from 'chacha20';
+import {default as debugModule} from 'debug';
 import * as crypto from 'crypto';
-import HopPayload from './hop_payload';
-import SharedSecret, {KeyType} from './shared_secret';
+import HopPayload from './hop_payload.mjs';
+import SharedSecret, {KeyType} from './shared_secret.mjs';
 
 const debug = debugModule('bolt04:sphinx');
+
+type PeelMechanism = {
+	sharedSecret: Buffer,
+	hopPrivateKey?: undefined | null
+} | {
+	hopPrivateKey: Buffer,
+	sharedSecret?: undefined | null
+};
+export type PeelArgument = { associatedData: Buffer } & PeelMechanism;
 
 export default class Sphinx {
 
@@ -27,10 +37,11 @@ export default class Sphinx {
 		return Buffer.concat([Buffer.alloc(1, this.version), this.ephemeralPublicKey, this.hopPayloads, this.nextHmac]);
 	}
 
-	public peel({sharedSecret, hopPrivateKey, associatedData}: { sharedSecret?: Buffer, hopPrivateKey?: Buffer, associatedData?: Buffer }): {
+	public peel({sharedSecret, hopPrivateKey, associatedData}: PeelArgument): {
 		hopPayload: HopPayload,
-		sphinx?: Sphinx
+		sphinx?: Sphinx | null
 	} {
+
 		if (!!sharedSecret === !!hopPrivateKey) {
 			throw new Error('sharedSecret XOR hopPrivateKey must be specified');
 		}
@@ -40,6 +51,10 @@ export default class Sphinx {
 				privateKey: hopPrivateKey,
 				publicKey: this.ephemeralPublicKey
 			});
+		}
+
+		if (!sharedSecret) {
+			throw new Error('shared secret should be set by this point');
 		}
 
 		debug('Shared secret: %s', sharedSecret.toString('hex'));
@@ -67,8 +82,8 @@ export default class Sphinx {
 		const streamBytes = chacha.encrypt(rhoKey, Buffer.alloc(8, 0), Buffer.alloc(streamLength, 0));
 
 		// apply the XOR
-		for (let i = 0; i < extendedPayload.length; i++) {
-			extendedPayload.writeUInt8(extendedPayload[i] ^ streamBytes[i], i);
+		for (const [i, currentByte] of extendedPayload.entries()) {
+			extendedPayload.writeUInt8(currentByte ^ streamBytes[i], i);
 		}
 
 		const hopPayload = HopPayload.parseSphinxBuffer(extendedPayload);
@@ -114,8 +129,8 @@ export default class Sphinx {
 
 		for (let i = sharedSecrets.length - 1; i >= 0; i--) {
 			debug('Onion round %d', i);
-			const currentSharedSecret = sharedSecrets[i];
-			const currentPayload = payloads[i];
+			const currentSharedSecret = sharedSecrets[i]!;
+			const currentPayload = payloads[i]!;
 			const rhoKey = SharedSecret.deriveKey({sharedSecret: currentSharedSecret, keyType: KeyType.Rho});
 			const muKey = SharedSecret.deriveKey({sharedSecret: currentSharedSecret, keyType: KeyType.Mu});
 
@@ -134,7 +149,7 @@ export default class Sphinx {
 			// XOR the onion packet with the stream bytes
 			for (let j = 0; j < 1300; j++) {
 				// let's not XOR anything for now
-				hopPayloads.writeUInt8(hopPayloads[j] ^ streamBytes[j], j);
+				hopPayloads.writeUInt8(hopPayloads[j]! ^ streamBytes[j], j);
 			}
 
 			if (i == sharedSecrets.length - 1) {
@@ -156,16 +171,16 @@ export default class Sphinx {
 	private static generateFiller({sharedSecrets, payloads}: { sharedSecrets: Buffer[], payloads: HopPayload[] }) {
 		const payloadSizes = payloads.map(p => p.sphinxSize + Sphinx.HMAC_LENGTH);
 		const totalPayloadSize = payloadSizes.reduce((a, b) => a + b);
-		const lastPayloadSize = payloadSizes[payloadSizes.length - 1];
+		const lastPayloadSize = payloadSizes[payloadSizes.length - 1]!;
 
 		const fillerSize = totalPayloadSize - lastPayloadSize;
 		const filler = Buffer.alloc(fillerSize, 0);
 
 		let trailingPayloadSize = 0;
-		for (let i = 0; i < sharedSecrets.length - 1; i++) {
+		// we don't want to include the last shared secret in the iteration
+		for (const [i, currentSharedSecret] of sharedSecrets.slice(0, -1).entries()) {
 			debug('Filler round %d', i);
-			const currentSharedSecret = sharedSecrets[i];
-			const currentPayloadSize = payloadSizes[i];
+			const currentPayloadSize = payloadSizes[i]!;
 
 			debug('Shared secret: %s', currentSharedSecret.toString('hex'));
 			const streamKey = SharedSecret.deriveKey({sharedSecret: currentSharedSecret, keyType: KeyType.Rho});
@@ -178,7 +193,7 @@ export default class Sphinx {
 			const streamBytes = chacha.encrypt(streamKey, Buffer.alloc(8, 0), Buffer.alloc(streamLength, 0));
 			for (let j = fillerSourceStart; j < fillerSourceEnd; j++) {
 				const fillerIndex = j - fillerSourceStart;
-				const fillerValue = filler[fillerIndex];
+				const fillerValue = filler[fillerIndex]!;
 				const streamValue = streamBytes[j];
 				filler.writeUInt8(fillerValue ^ streamValue, fillerIndex);
 			}

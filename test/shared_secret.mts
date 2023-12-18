@@ -1,5 +1,5 @@
-import SharedSecret, {KeyType} from '../src/shared_secret';
-import chai = require('chai');
+import SharedSecret, {KeyType} from '../src/shared_secret.mjs';
+import chai from 'chai';
 
 const assert = chai.assert;
 
@@ -19,11 +19,11 @@ describe('Shared Secret Tests', () => {
 		const sharedSecrets = SharedSecret.calculateSharedSecrets({sessionKey, hopPublicKeys});
 		assert.lengthOf(sharedSecrets, 5);
 		assert.typeOf(sharedSecrets[0], 'UInt8Array');
-		assert.equal(sharedSecrets[0].toString('hex'), '53eb63ea8a3fec3b3cd433b85cd62a4b145e1dda09391b348c4e1cd36a03ea66');
-		assert.equal(sharedSecrets[1].toString('hex'), 'a6519e98832a0b179f62123b3567c106db99ee37bef036e783263602f3488fae');
-		assert.equal(sharedSecrets[2].toString('hex'), '3a6b412548762f0dbccce5c7ae7bb8147d1caf9b5471c34120b30bc9c04891cc');
-		assert.equal(sharedSecrets[3].toString('hex'), '21e13c2d7cfe7e18836df50872466117a295783ab8aab0e7ecc8c725503ad02d');
-		assert.equal(sharedSecrets[4].toString('hex'), 'b5756b9b542727dbafc6765a49488b023a725d631af688fc031217e90770c328');
+		assert.equal(sharedSecrets[0]!.toString('hex'), '53eb63ea8a3fec3b3cd433b85cd62a4b145e1dda09391b348c4e1cd36a03ea66');
+		assert.equal(sharedSecrets[1]!.toString('hex'), 'a6519e98832a0b179f62123b3567c106db99ee37bef036e783263602f3488fae');
+		assert.equal(sharedSecrets[2]!.toString('hex'), '3a6b412548762f0dbccce5c7ae7bb8147d1caf9b5471c34120b30bc9c04891cc');
+		assert.equal(sharedSecrets[3]!.toString('hex'), '21e13c2d7cfe7e18836df50872466117a295783ab8aab0e7ecc8c725503ad02d');
+		assert.equal(sharedSecrets[4]!.toString('hex'), 'b5756b9b542727dbafc6765a49488b023a725d631af688fc031217e90770c328');
 	});
 
 	it('should derive a key from shared secret', () => {

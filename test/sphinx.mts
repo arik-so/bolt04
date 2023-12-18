@@ -1,6 +1,6 @@
-import chai = require('chai');
-import HopPayload, {HopPayloadType} from '../src/hop_payload';
-import Sphinx from '../src/sphinx';
+import chai from 'chai';
+import HopPayload, {HopPayloadType} from '../src/hop_payload.mjs';
+import Sphinx from '../src/sphinx.mjs';
 
 const assert = chai.assert;
 
@@ -87,14 +87,14 @@ describe('Sphinx Tests', () => {
 			Buffer.from('4545454545454545454545454545454545454545454545454545454545454545', 'hex')
 		];
 
-		const peel0 = sphinx.peel({hopPrivateKey: hopPrivateKeys[0], associatedData});
-		const peel1 = peel0.sphinx.peel({hopPrivateKey: hopPrivateKeys[1], associatedData});
-		const peel2 = peel1.sphinx.peel({
+		const peel0 = sphinx.peel({hopPrivateKey: hopPrivateKeys[0]!, associatedData});
+		const peel1 = peel0.sphinx!.peel({hopPrivateKey: hopPrivateKeys[1]!, associatedData});
+		const peel2 = peel1.sphinx!.peel({
 			sharedSecret: Buffer.from('3a6b412548762f0dbccce5c7ae7bb8147d1caf9b5471c34120b30bc9c04891cc', 'hex'),
 			associatedData
 		});
-		const peel3 = peel2.sphinx.peel({hopPrivateKey: hopPrivateKeys[3], associatedData});
-		const peel4 = peel3.sphinx.peel({hopPrivateKey: hopPrivateKeys[4], associatedData});
+		const peel3 = peel2.sphinx!.peel({hopPrivateKey: hopPrivateKeys[3]!, associatedData});
+		const peel4 = peel3.sphinx!.peel({hopPrivateKey: hopPrivateKeys[4]!, associatedData});
 		assert.isNull(peel4.sphinx);
 
 		const lastHopPayload = peel4.hopPayload;
@@ -116,14 +116,14 @@ describe('Sphinx Tests', () => {
 			Buffer.from('4545454545454545454545454545454545454545454545454545454545454545', 'hex')
 		];
 
-		const peel0 = sphinx.peel({hopPrivateKey: hopPrivateKeys[0], associatedData});
-		const peel1 = peel0.sphinx.peel({hopPrivateKey: hopPrivateKeys[1], associatedData});
-		const peel2 = peel1.sphinx.peel({
+		const peel0 = sphinx.peel({hopPrivateKey: hopPrivateKeys[0]!, associatedData})!;
+		const peel1 = peel0.sphinx!.peel({hopPrivateKey: hopPrivateKeys[1]!, associatedData});
+		const peel2 = peel1.sphinx!.peel({
 			sharedSecret: Buffer.from('3a6b412548762f0dbccce5c7ae7bb8147d1caf9b5471c34120b30bc9c04891cc', 'hex'),
 			associatedData
 		});
-		const peel3 = peel2.sphinx.peel({hopPrivateKey: hopPrivateKeys[3], associatedData});
-		const peel4 = peel3.sphinx.peel({hopPrivateKey: hopPrivateKeys[4], associatedData});
+		const peel3 = peel2.sphinx!.peel({hopPrivateKey: hopPrivateKeys[3]!, associatedData})!;
+		const peel4 = peel3.sphinx!.peel({hopPrivateKey: hopPrivateKeys[4]!, associatedData})!;
 		assert.isNull(peel4.sphinx);
 
 		const lastHopPayload = peel4.hopPayload;

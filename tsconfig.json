@@ -1,15 +1,37 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2017",
+		"module": "ES2020",
+		"moduleResolution": "Node",
+		"target": "es2021",
 		"sourceMap": true,
-		"declaration": true,
-		"lib": [
-			"es2017"
-		]
+		"esModuleInterop": false,
+		// strictness settings
+		"allowSyntheticDefaultImports": true,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"exactOptionalPropertyTypes": true,
+		"noFallthroughCasesInSwitch": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitAny": true,
+		"strict": true,
+		// directory settings
+		// "rootDir": "src",
+		// "resolveJsonModule": true
+		"skipLibCheck": true
 	},
 	"compileOnSave": true,
+	"include": [
+		"src",
+		"test"
+	],
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"src/models"
 	]
 }

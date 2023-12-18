@@ -1,8 +1,8 @@
 {
 	"name": "bolt04",
-	"version": "0.1.5",
+	"version": "0.2.0",
 	"description": "Module for Lightning's Sphinx onion routing protocol",
-	"main": "index.js",
+	"main": "index.mjs",
 	"types": "index.d.ts",
 	"scripts": {
 		"test": "./node_modules/mocha/bin/_mocha ./test",
@@ -32,19 +32,19 @@
 		"@types/chai": "^4.2.5",
 		"@types/debug": "^4.1.5",
 		"@types/ecurve": "^1.0.0",
-		"@types/mocha": "^5.2.7",
+		"@types/mocha": "~10.0.6",
 		"@types/node": "^12.12.11",
 		"chai": "^4.2.0",
 		"coveralls": "^3.0.8",
 		"istanbul": "^0.4.5",
-		"mocha": "^6.2.2",
-		"typescript": "^3.7.2"
+		"mocha": "~10.2.0",
+		"typescript": "~5.3.3"
 	},
 	"dependencies": {
 		"bigi": "^1.4.2",
 		"bigint-buffer": "^1.1.5",
 		"chacha20": "^0.1.4",
-		"debug": "^4.1.1",
+		"debug": "~4.3.4",
 		"ecurve": "^1.0.6",
 		"lightning-tlv": "^0.1.5",
 		"varuint-bitcoin": "^1.1.2"
