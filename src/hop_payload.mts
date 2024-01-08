@@ -6,10 +6,14 @@ export enum HopPayloadType {
 	TLV
 }
 
-enum HopPayloadTLVTypes {
+export enum HopPayloadTLVTypes {
 	AMOUNT_TO_FORWARD = 2,
 	OUTGOING_CLTV_VALUE = 4,
-	SHORT_CHANNEL_ID = 6
+	SHORT_CHANNEL_ID = 6,
+	// boolean
+	TRAMPOLINE_ENTRY_NODE = 66100,
+	TRAMPOLINE_MAX_REWRAP_OFFSET = 66102,
+	TRAMPOLINE_EXIT_KEY = 66104
 }
 
 export default class HopPayload {
@@ -17,6 +21,7 @@ export default class HopPayload {
 	public readonly channelId?: Buffer | null;
 	public readonly amountToForward: bigint;
 	public readonly outgoingCltvValue: number;
+	public additionalTLVs: TLV[] = [];
 
 	constructor({channel_id = null, amount_to_forward = 0, outgoing_cltv_value = 0, type = HopPayloadType.Legacy}: {
 		channel_id?: Buffer | null,
@@ -73,7 +78,7 @@ export default class HopPayload {
 				channelIdTlvBuffer = channelIdTlv.toBuffer();
 			}
 
-			return Buffer.concat([amountToForwardTlv.toBuffer(), outgoingCltvValueTlv.toBuffer(), channelIdTlvBuffer]);
+			return Buffer.concat([amountToForwardTlv.toBuffer(), outgoingCltvValueTlv.toBuffer(), channelIdTlvBuffer, ...this.additionalTLVs.map(t => t.toBuffer())]);
 		}
 		const buffer = Buffer.alloc(32);
 
@@ -138,6 +143,8 @@ export default class HopPayload {
 				type: HopPayloadType.TLV
 			};
 
+			const additionalTLVs = [];
+
 			for (const currentTlv of tlvs) {
 				const currentType = Number(currentTlv.type);
 				if (currentType === HopPayloadTLVTypes.AMOUNT_TO_FORWARD) {
@@ -148,10 +155,14 @@ export default class HopPayload {
 					hopPayloadConfig['outgoing_cltv_value'] = tu32Handler.fromBuffer(currentTlv.value);
 				} else if (currentType === HopPayloadTLVTypes.SHORT_CHANNEL_ID) {
 					hopPayloadConfig['channel_id'] = currentTlv.value;
+				} else {
+					additionalTLVs.push(currentTlv);
 				}
 			}
 
-			return new HopPayload(hopPayloadConfig);
+			const payload = new HopPayload(hopPayloadConfig);
+			payload.additionalTLVs = additionalTLVs;
+			return payload;
 		}
 	}
 }
