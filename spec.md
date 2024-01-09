@@ -13,6 +13,8 @@ The Trampoline node should find a path towards the next hop in the onion.
 The Trampoline node should encode that path by re-wrapping the onion, except instead of starting from the 0-byte
 HMAC, it should start from the one for the next hop.
 
+The re-wrapping should start with a distinct, newly generate random session private key.
+
 The hop data immediately preceding the next hop (i.e. if the Trampoline node is Alice, and the next hop is Dave, and
 the Trampoline node finds a pathway that is Alice -> Bob -> Charlie -> Dave), Charlie's hop should contain the following
 field:
